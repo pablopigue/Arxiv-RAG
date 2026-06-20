@@ -1,0 +1,25 @@
+# --- Core RAG stack ---
+sentence-transformers==3.0.1     # embeddings + cross-encoder reranker
+chromadb==0.5.5                  # local persistent vector store
+ollama==0.3.3                    # client for the local LLM server
+
+# --- Ingestion ---
+arxiv==2.1.3                     # wrapper over the arXiv API
+pymupdf==1.24.9                  # PDF text extraction
+
+# --- Serving ---
+fastapi==0.111.1
+uvicorn[standard]==0.30.3
+pydantic==2.8.2
+pydantic-settings==2.4.0
+streamlit==1.37.1                # minimal demo UI
+
+# --- Utils / eval ---
+httpx==0.27.0
+numpy==1.26.4
+tqdm==4.66.4
+python-dotenv==1.0.1
+rich==13.7.1
+
+# --- Dev ---
+pytest==8.3.2

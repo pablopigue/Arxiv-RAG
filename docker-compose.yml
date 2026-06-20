@@ -1,0 +1,30 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Uncomment to use an NVIDIA GPU:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - RAG_OLLAMA_HOST=http://ollama:11434
+      - RAG_OLLAMA_MODEL=llama3.1
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - ollama
+
+volumes:
+  ollama_data:

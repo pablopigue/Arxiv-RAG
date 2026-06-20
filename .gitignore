@@ -1,0 +1,18 @@
+# Data & artifacts
+data/raw/*.pdf
+data/chroma/
+eval/qa_set.jsonl
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Env / IDE
+.env
+.idea/
+.vscode/
+.DS_Store
