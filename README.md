@@ -10,7 +10,7 @@ an evaluation harness, a REST API, and a UI.
 
 ---
 
-## Why this is more than a toy
+## Built for Production
 
 Most RAG demos stop at "embed a PDF and ask a question." This one adds the parts that
 matter in practice:
