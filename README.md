@@ -97,16 +97,21 @@ python eval/eval_dataset.py          # bootstrap a synthetic QA set from the cor
 python eval/evaluate.py --faithfulness
 ```
 
-Example output:
+Example output and analysis:
 
 | Metric                | Dense only | + Reranker |
 |-----------------------|:----------:|:----------:|
-| Hit@5                 |    0.46    |    0.56    |
-| MRR                   |    0.37    |    0.46    |
-| Faithfulness (judge)  |     —      |    0.68    |
+| Hit@5                 |    0.44    |    0.54    |
+| MRR                   |    0.35    |    0.44    |
+| Faithfulness (judge)  |    0.73    |    0.72    |
+| Abstentions (of 50)   |     2      |     0      |
 
 > The synthetic set is bootstrapped: the LLM writes a question answerable only from a
 > sampled chunk, and that chunk becomes the gold passage.
+> Reranking clearly improves retrieval (MRR +0.09, Hit@5 +0.10) and removes
+> abstentions (2 -> 0): better passages let the model answer questions where dense
+> retrieval came up short. Faithfulness stays flat (~0.72) - it measures whether the
+> answer sticks to its sources, which the reranker doesn't change.
 
 ---
 

@@ -69,7 +69,8 @@ def retrieval_metrics(use_reranker: bool, k: int = 5) -> dict:
     return {"n": n, f"hit@{k}": hits_at_k / n, "mrr": rr_sum / n}
 
 
-def faithfulness_score() -> dict:
+def faithfulness_score(use_reranker: bool) -> dict:
+    settings.use_reranker = use_reranker
     pipeline = RAGPipeline()
     judge = get_llm()
     qa = load_qa()
@@ -113,9 +114,15 @@ def main() -> None:
     print(f"  Reranker MRR lift: {lift:+.3f}")
 
     if args.faithfulness:
-        print("\n=== Faithfulness (LLM-as-judge) ===")
-        f = faithfulness_score()
-        print(f"  faithfulness={f['faithfulness']:.3f}  (abstained on {f['abstained']}/{f['n']})")
+            print("\n=== Faithfulness (LLM-as-judge) ===")
+            base_f = faithfulness_score(use_reranker=False)
+            reranked_f = faithfulness_score(use_reranker=True)
+            print(f"  Dense only     : faithfulness={base_f['faithfulness']:.3f}  "
+                f"(abstained on {base_f['abstained']}/{base_f['n']})")
+            print(f"  + Reranker     : faithfulness={reranked_f['faithfulness']:.3f}  "
+                f"(abstained on {reranked_f['abstained']}/{reranked_f['n']})")
+            f_lift = reranked_f["faithfulness"] - base_f["faithfulness"]
+            print(f"  Reranker faithfulness lift: {f_lift:+.3f}")
 
 
 if __name__ == "__main__":
