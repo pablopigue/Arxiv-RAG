@@ -1,4 +1,4 @@
-# arXiv RAG — ask machine-learning papers, get cited answers
+# arXiv RAG - ask machine-learning papers, get cited answers
 
 A retrieval-augmented generation system that answers questions over a corpus of
 arXiv papers and **grounds every answer in cited sources**. Runs fully locally and
