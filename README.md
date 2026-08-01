@@ -2,7 +2,7 @@
 
 A retrieval-augmented generation system that answers questions over a corpus of
 arXiv papers and **grounds every answer in cited sources**. Runs fully locally and
-free with [Ollama](https://ollama.com) — no API keys, no per-token costs.
+free with [Ollama](https://ollama.com) - no API keys, no per-token costs.
 
 Built to demonstrate a production-shaped RAG pipeline end to end: ingestion,
 chunking, dense retrieval with cross-encoder reranking, grounded generation,
@@ -15,15 +15,15 @@ an evaluation harness, a REST API, and a UI.
 Most RAG demos stop at "embed a PDF and ask a question." This one adds the parts that
 matter in practice:
 
-- **Two-stage retrieval** — fast bi-encoder recall, then a cross-encoder reranker. The
+- **Two-stage retrieval** - fast bi-encoder recall, then a cross-encoder reranker. The
   eval harness *quantifies the reranker's lift* so the design choice is measured, not assumed.
-- **Grounded generation with citations** — the model must answer only from retrieved
+- **Grounded generation with citations** - the model must answer only from retrieved
   context and cite sources inline `[1][2]`, or explicitly abstain.
-- **Evaluation built in** — Hit@k and MRR for retrieval, plus an LLM-as-judge
+- **Evaluation built in** - Hit@k and MRR for retrieval, plus an LLM-as-judge
   faithfulness score for generation.
-- **Swappable LLM backend** — the pipeline depends on an `LLM` protocol, so moving from
+- **Swappable LLM backend** - the pipeline depends on an `LLM` protocol, so moving from
   Ollama to Claude/OpenAI is one class and one line.
-- **Servable** — FastAPI endpoint + Streamlit UI + Docker Compose (app + Ollama).
+- **Servable** - FastAPI endpoint + Streamlit UI + Docker Compose (app + Ollama).
 
 ---
 
