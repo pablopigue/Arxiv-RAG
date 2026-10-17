@@ -3,6 +3,7 @@
 Run: uvicorn src.api.main:app --reload
 Docs: http://localhost:8000/docs
 """
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -11,7 +12,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from src.generation.rag_pipeline import RAGPipeline
-from src.retrieval.vector_store import VectorStore
+from src.retrieval.vector_store import count, get_vector_store
 
 app = FastAPI(title="arXiv RAG", version="1.0.0")
 
@@ -42,7 +43,7 @@ class QueryResponse(BaseModel):
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "indexed_chunks": VectorStore().count()}
+    return {"status": "ok", "indexed_chunks": count(get_vector_store())}
 
 
 @app.post("/query", response_model=QueryResponse)

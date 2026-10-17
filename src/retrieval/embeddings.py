@@ -1,27 +1,26 @@
-"""Local embedding model.
+"""Local embedding model, exposed through LangChain's `Embeddings` interface.
+
+Anything that takes a LangChain `Embeddings` (vector stores, retrievers, eval
+tools) can use this object, and swapping to a hosted model is a one-line change.
 """
+
 from __future__ import annotations
 
 from functools import lru_cache
 
-from sentence_transformers import SentenceTransformer
+from langchain_huggingface import HuggingFaceEmbeddings
 
 from src.config import settings
 
 
 @lru_cache(maxsize=1)
-def _model() -> SentenceTransformer:
-    return SentenceTransformer(settings.embedding_model)
-
-
-def embed_passages(texts: list[str]) -> list[list[float]]:
-    vecs = _model().encode(
-        texts, normalize_embeddings=True, batch_size=32, show_progress_bar=False
+def get_embeddings() -> HuggingFaceEmbeddings:
+    return HuggingFaceEmbeddings(
+        model_name=settings.embedding_model,
+        encode_kwargs={"normalize_embeddings": True, "batch_size": 32},
+        # bge expects an instruction prefix on the *query* only, never on passages.
+        query_encode_kwargs={
+            "normalize_embeddings": True,
+            "prompt": settings.query_instruction,
+        },
     )
-    return vecs.tolist()
-
-
-def embed_query(text: str) -> list[float]:
-    prefixed = settings.query_instruction + text
-    vec = _model().encode([prefixed], normalize_embeddings=True)[0]
-    return vec.tolist()

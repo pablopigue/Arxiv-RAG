@@ -1,26 +1,34 @@
 """Tests for the chunker."""
+
 from __future__ import annotations
 
-from src.ingest.chunker import _split_recursive, chunk_pages
+from langchain_core.documents import Document
+
+from src.ingest.chunker import chunk_documents
+
+BASE = {"arxiv_id": "1234.5678", "title": "Test", "authors": "X", "published": "2024-01-01"}
 
 
-def test_split_respects_max_size():
-    text = "a" * 5000
-    pieces = _split_recursive(text, size=1000, seps=["\n\n", "\n", ". ", " "])
-    assert all(len(p) <= 1000 for p in pieces)
-    assert "".join(pieces) == text
+def _page(n: int, text: str) -> Document:
+    return Document(page_content=text, metadata={**BASE, "page": n})
+
+
+def test_chunks_respect_max_size():
+    chunks = chunk_documents([_page(1, "a" * 5000)], size=1000, overlap=0)
+    assert all(len(c.page_content) <= 1000 for c in chunks)
+    assert "".join(c.page_content for c in chunks) == "a" * 5000
 
 
 def test_split_prefers_paragraph_boundaries():
-    text = "Para one.\n\nPara two.\n\nPara three."
-    pieces = _split_recursive(text, size=15, seps=["\n\n", "\n", ". ", " "])
-    assert "Para one." in pieces
+    text = ("Para one is long enough to keep around. " * 2).strip()
+    pages = [_page(1, f"{text}\n\n{text.replace('one', 'two')}")]
+    chunks = chunk_documents(pages, size=len(text) + 5, overlap=0)
+    assert chunks[0].page_content == text
 
 
-def test_chunk_pages_carries_metadata():
-    pages = [(1, "Sentence one. " * 200), (2, "Other content. " * 200)]
-    base = {"arxiv_id": "1234.5678", "title": "Test", "authors": "X", "published": "2024-01-01"}
-    chunks = chunk_pages(pages, base, size=500, overlap=50)
+def test_chunks_carry_metadata():
+    pages = [_page(1, "Sentence one. " * 200), _page(2, "Other content. " * 200)]
+    chunks = chunk_documents(pages, size=500, overlap=50)
     assert chunks
     for c in chunks:
         assert c.metadata["arxiv_id"] == "1234.5678"
@@ -29,6 +37,4 @@ def test_chunk_pages_carries_metadata():
 
 
 def test_tiny_fragments_dropped():
-    pages = [(1, "short")]
-    base = {"arxiv_id": "1", "title": "t", "authors": "a", "published": "2024-01-01"}
-    assert chunk_pages(pages, base) == []
+    assert chunk_documents([_page(1, "short")]) == []
