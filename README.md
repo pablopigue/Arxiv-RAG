@@ -32,15 +32,6 @@ matter in practice:
 - **Swappable LLM backend** — the LLM comes from `init_chat_model`, so moving from
   Ollama to Claude/OpenAI is two env vars (`RAG_LLM_PROVIDER`, `RAG_LLM_MODEL`).
 - **Servable** — FastAPI endpoint + token-streaming Streamlit UI + Docker Compose (app + Ollama).
-- **Two-stage retrieval** - fast bi-encoder recall, then a cross-encoder reranker. The
-  eval harness *quantifies the reranker's lift* so the design choice is measured, not assumed.
-- **Grounded generation with citations** - the model must answer only from retrieved
-  context and cite sources inline `[1][2]`, or explicitly abstain.
-- **Evaluation built in** - Hit@k and MRR for retrieval, plus an LLM-as-judge
-  faithfulness score for generation.
-- **Swappable LLM backend** - the pipeline depends on an `LLM` protocol, so moving from
-  Ollama to Claude/OpenAI is one class and one line.
-- **Servable** - FastAPI endpoint + Streamlit UI + Docker Compose (app + Ollama).
 
 ---
 
