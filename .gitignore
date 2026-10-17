@@ -10,9 +10,19 @@ __pycache__/
 venv/
 *.egg-info/
 .pytest_cache/
+.ruff_cache/
 
 # Env / IDE
 .env
 .idea/
 .vscode/
 .DS_Store
+
+eval/qa_set*.jsonl
+eval/results*.json
+# ...except the run that backs the README numbers
+!eval/results_200.json
+eval/results*.txt
+
+# Local documentation
+info/

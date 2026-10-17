@@ -3,13 +3,19 @@
 Every tunable lives here so the rest of the code never hard-codes a model name
 or a path.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
 
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+# pydantic-settings reads .env into Settings only; LangSmith reads its LANGSMITH_*
+# variables from os.environ, so export the file there as well.
+load_dotenv(PROJECT_ROOT / ".env")
 
 
 class Settings(BaseSettings):
@@ -31,18 +37,20 @@ class Settings(BaseSettings):
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
     # Chunking
-    chunk_size: int = 1000          # characters (~250 tokens)
+    chunk_size: int = 1000  # characters (~250 tokens)
     chunk_overlap: int = 150
 
     # Retrieval
-    top_k: int = 20                 # candidates pulled from the vector store
-    top_n: int = 5                  # passages kept after reranking and fed to the LLM
+    top_k: int = 20  # candidates pulled from the vector store
+    top_n: int = 5  # passages kept after reranking and fed to the LLM
+    use_hybrid: bool = True  # also run BM25 keyword search and fuse it with dense results
+    rrf_k: int = 60  # reciprocal rank fusion constant
 
     # Generation
-    llm_backend: str = "ollama"     # the LLM layer is swappable: see src/generation/llm.py
+    llm_provider: str = "ollama"  # any init_chat_model provider: see src/generation/llm.py
+    llm_model: str = "llama3.1"
     ollama_host: str = "http://localhost:11434"
-    ollama_model: str = "llama3.1"  
-    temperature: float = 0.1 
+    temperature: float = 0.1
 
     def ensure_dirs(self) -> None:
         for d in (self.data_dir, self.raw_dir, self.chroma_dir):

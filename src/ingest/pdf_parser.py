@@ -1,10 +1,12 @@
-"""Extract clean text from a PDF, page by page, using fitz."""
+"""Extract clean text from a PDF, one LangChain Document per page, using PyMuPDF."""
+
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
-import fitz
+import pymupdf
+from langchain_core.documents import Document
 
 
 def _clean(text: str) -> str:
@@ -16,17 +18,12 @@ def _clean(text: str) -> str:
     return text.strip()
 
 
-def extract_pages(pdf_path: Path) -> list[tuple[int, str]]:
-    """Return a list of (page_number, text). Page numbers are 1-indexed."""
-    pages: list[tuple[int, str]] = []
-    with fitz.open(pdf_path) as doc:
+def load_pages(pdf_path: Path, metadata: dict | None = None) -> list[Document]:
+    """Return one Document per non-empty page. Page numbers are 1-indexed."""
+    pages: list[Document] = []
+    with pymupdf.open(pdf_path) as doc:
         for i, page in enumerate(doc, start=1):
             text = _clean(page.get_text("text"))
             if text:
-                pages.append((i, text))
+                pages.append(Document(page_content=text, metadata={**(metadata or {}), "page": i}))
     return pages
-
-
-def extract_text(pdf_path: Path) -> str:
-    """Convenience: the whole document as one string."""
-    return "\n\n".join(text for _, text in extract_pages(pdf_path))

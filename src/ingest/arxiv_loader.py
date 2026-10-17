@@ -1,4 +1,5 @@
 """Fetch paper metadata and PDFs from the arXiv API."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

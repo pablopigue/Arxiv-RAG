@@ -1,69 +1,41 @@
-"""Thin wrapper around a persistent ChromaDB collection.
+"""Persistent ChromaDB collection via LangChain's `Chroma` vector store.
 
-Compute embeddings (see embeddings.py) and pass them in, rather than
-letting Chroma pick a default model, so the same model is guaranteed at index and
-query time.
+The embedding function is attached to the store, so the same model is guaranteed
+at index and query time.
 """
+
 from __future__ import annotations
 
-import chromadb
 from chromadb.config import Settings as ChromaSettings
+from langchain_chroma import Chroma
+from langchain_core.documents import Document
 
 from src.config import settings
-from src.ingest.chunker import Chunk
-from src.retrieval.embeddings import embed_passages, embed_query
+from src.retrieval.embeddings import get_embeddings
 
 
-class VectorStore:
-    def __init__(self) -> None:
-        settings.ensure_dirs()
-        self._client = chromadb.PersistentClient(
-            path=str(settings.chroma_dir),
-            settings=ChromaSettings(anonymized_telemetry=False),
-        )
-        self._collection = self._client.get_or_create_collection(
-            name=settings.collection_name,
-            metadata={"hnsw:space": "cosine"},
-        )
+def get_vector_store() -> Chroma:
+    settings.ensure_dirs()
+    return Chroma(
+        collection_name=settings.collection_name,
+        embedding_function=get_embeddings(),
+        persist_directory=str(settings.chroma_dir),
+        collection_metadata={"hnsw:space": "cosine"},
+        client_settings=ChromaSettings(anonymized_telemetry=False),
+    )
 
-    # write
-    def add_chunks(self, chunks: list[Chunk]) -> int:
-        if not chunks:
-            return 0
-        texts = [c.text for c in chunks]
-        embeddings = embed_passages(texts)
-        ids = [
-            f"{c.metadata['arxiv_id']}::p{c.metadata['page']}::c{c.metadata['chunk_on_page']}"
-            for c in chunks
-        ]
-        self._collection.add(
-            ids=ids,
-            documents=texts,
-            embeddings=embeddings,
-            metadatas=[c.metadata for c in chunks],
-        )
-        return len(chunks)
 
-    # read
-    def query(self, text: str, k: int | None = None) -> list[dict]:
-        k = k or settings.top_k
-        res = self._collection.query(
-            query_embeddings=[embed_query(text)],
-            n_results=k,
-            include=["documents", "metadatas", "distances"],
-        )
-        hits: list[dict] = []
-        for doc, meta, dist in zip(
-            res["documents"][0], res["metadatas"][0], res["distances"][0]
-        ):
-            hits.append({"text": doc, "metadata": meta, "score": 1.0 - dist})
-        return hits
+def chunk_id(metadata: dict) -> str:
+    """Stable id for a chunk; the eval set uses it as the gold label."""
+    return f"{metadata['arxiv_id']}::p{metadata['page']}::c{metadata['chunk_on_page']}"
 
-    def count(self) -> int:
-        return self._collection.count()
 
-    def reset(self) -> None:
-        self._client.delete_collection(settings.collection_name)
-        self._collection = self._client.get_or_create_collection(
-            name=settings.collection_name, metadata={"hnsw:space": "cosine"}
-        )
+def add_documents(store: Chroma, docs: list[Document]) -> int:
+    if not docs:
+        return 0
+    store.add_documents(docs, ids=[chunk_id(d.metadata) for d in docs])
+    return len(docs)
+
+
+def count(store: Chroma) -> int:
+    return len(store.get(include=[])["ids"])
