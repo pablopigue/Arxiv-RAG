@@ -96,7 +96,7 @@ uv run streamlit run src/app/streamlit_app.py      # http://localhost:8501 (stre
 uv run uvicorn src.api.main:app --reload           # http://localhost:8000/docs
 ```
 
-### 5. Agent (fetches new papers when the index can't answer)
+### 5. Agent, fetches new papers when the index can't answer
 
 A corrective-RAG loop built with LangGraph: after retrieving, an LLM grader checks whether
 the sources can answer the question. If not, the agent rewrites the question into an arXiv
