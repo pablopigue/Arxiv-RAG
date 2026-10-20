@@ -97,6 +97,23 @@ uv run uvicorn src.api.main:app --reload           # http://localhost:8000/docs
 ```
 
 ### 5. Agent (fetches new papers when the index can't answer)
+
+A corrective-RAG loop built with LangGraph: after retrieving, an LLM grader checks whether
+the sources can answer the question. If not, the agent rewrites the question into an arXiv
+search query, downloads and indexes the top papers, and retrieves again. `max_fetches`
+(default 1) bounds the loop so a strict grader can't make it run forever.
+
+```mermaid
+flowchart TD
+    START([Start]) --> retrieve[retrieve<br/>hybrid search + rerank]
+    retrieve --> grade{grade<br/>are the sources sufficient?}
+    grade -- "yes, or max_fetches reached" --> generate[generate<br/>cited answer]
+    grade -- no --> rewrite[rewrite_query<br/>question → arXiv keywords]
+    rewrite --> search[search_arxiv<br/>download + index top papers]
+    search --> retrieve
+    generate --> END([End])
+```
+
 ```bash
 uv run scripts/agent.py "What is speculative decoding for faster LLM inference?"
 uv run scripts/agent.py --graph                    # print the LangGraph as Mermaid
