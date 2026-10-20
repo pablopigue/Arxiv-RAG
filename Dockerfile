@@ -1,10 +1,14 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
+
+# uv is a single static binary; copy it from the official image.
+COPY --from=ghcr.io/astral-sh/uv:0.11.28 /uv /uvx /bin/
 
 WORKDIR /app
 
-# System deps for PyMuPDF wheels are bundled, so we stay slim.
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies first (cached layer), exactly as pinned in uv.lock.
+COPY pyproject.toml uv.lock .python-version ./
+RUN uv sync --frozen --no-dev --no-install-project
+ENV PATH="/app/.venv/bin:$PATH"
 
 COPY . .
 
