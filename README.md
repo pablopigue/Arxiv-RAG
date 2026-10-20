@@ -16,22 +16,22 @@ and a streaming UI.
 Most RAG demos stop at "embed a PDF and ask a question." This one adds the parts that
 matter in practice:
 
-- **Hybrid two-stage retrieval** — dense (bi-encoder) and BM25 keyword recall fused with
+- **Hybrid two-stage retrieval**: dense (bi-encoder) and BM25 keyword recall fused with
   reciprocal rank fusion, then a cross-encoder reranker. Each component's lift is
   *measured*, not assumed.
-- **Grounded generation with citations** — the model must answer only from retrieved
+- **Grounded generation with citations**: the model must answer only from retrieved
   context and cite sources inline `[1][2]`, or explicitly abstain.
-- **Evaluation with statistics** — Hit@k and MRR for retrieval, an LLM-as-judge
+- **Evaluation with statistics**: Hit@k and MRR for retrieval, an LLM-as-judge
   faithfulness score (structured output), 95% bootstrap confidence intervals and
   paired lifts, on a 200-question synthetic set.
-- **Built on LangChain** — the pipeline is an LCEL chain, the retriever is a custom
+- **Built on LangChain**: the pipeline is an LCEL chain, the retriever is a custom
   `BaseRetriever`, storage and embeddings use the standard `Chroma` /
   `HuggingFaceEmbeddings` integrations, and everything is traceable in LangSmith.
-- **Corrective-RAG agent (LangGraph)** — when the indexed papers can't answer, the agent
+- **Corrective-RAG agent (LangGraph)**: when the indexed papers can't answer, the agent
   rewrites the question, fetches and indexes new arXiv papers, and retries.
-- **Swappable LLM backend** — the LLM comes from `init_chat_model`, so moving from
+- **Swappable LLM backend**: the LLM comes from `init_chat_model`, so moving from
   Ollama to Claude/OpenAI is two env vars (`RAG_LLM_PROVIDER`, `RAG_LLM_MODEL`).
-- **Servable** — FastAPI endpoint + token-streaming Streamlit UI + Docker Compose (app + Ollama).
+- **Servable**: FastAPI endpoint + token-streaming Streamlit UI + Docker Compose (app + Ollama).
 
 ---
 
@@ -50,7 +50,7 @@ flowchart LR
     E -.-> K
     F --> R[Reciprocal rank fusion]
     K --> R
-    R --> G[Cross-encoder<br/>rerank → top_n=5]
+    R --> G["Cross-encoder<br/>rerank -> top_n=5"]
     G --> H[Grounded prompt<br/>with numbered sources]
     H --> I[Ollama LLM]
     I --> J[Answer + citations<br/>streamed token by token]
@@ -108,7 +108,7 @@ flowchart TD
     START([Start]) --> retrieve[retrieve<br/>hybrid search + rerank]
     retrieve --> grade{grade<br/>are the sources sufficient?}
     grade -- "yes, or max_fetches reached" --> generate[generate<br/>cited answer]
-    grade -- no --> rewrite[rewrite_query<br/>question → arXiv keywords]
+    grade -- no --> rewrite["rewrite_query<br/>question -> arXiv keywords"]
     rewrite --> search[search_arxiv<br/>download + index top papers]
     search --> retrieve
     generate --> END([End])
@@ -119,13 +119,13 @@ uv run scripts/agent.py "What is speculative decoding for faster LLM inference?"
 uv run scripts/agent.py --graph                    # print the LangGraph as Mermaid
 ```
 ```
-→ retrieve 5 sources
-→ grade NOT sufficient
-→ rewrite_query 'speculative decoding LLM inference acceleration'
-→ search_arxiv indexed ['2503.00491v1', '2203.16487v6', '2508.17739v2']
-→ retrieve 5 sources
-→ grade ...
-→ generate done
+-> retrieve 5 sources
+-> grade NOT sufficient
+-> rewrite_query 'speculative decoding LLM inference acceleration'
+-> search_arxiv indexed ['2503.00491v1', '2203.16487v6', '2508.17739v2']
+-> retrieve 5 sources
+-> grade ...
+-> generate done
 ```
 > Fetched papers are added to the main index, which changes evaluation results.
 
@@ -171,17 +171,17 @@ Paired bootstrap lifts (same questions, both systems; all intervals exclude 0):
 **Reading the results**
 
 - BM25 and the reranker are complementary: BM25 mostly raises **recall** (Hit@5: it
-  surfaces chunks dense search missed — 26 questions fixed, 3 broken), the reranker
+  surfaces chunks dense search missed: 26 questions fixed, 3 broken), the reranker
   mostly raises **ranking** (MRR: it moves the right chunk to the top).
-- Any retrieval improvement cuts abstentions (11 → 4–5) and appears to raise
+- Any retrieval improvement cuts abstentions (11 -> 4-5) and appears to raise
   faithfulness, but faithfulness differences between the three improved configs are within noise.
-- **Caveat:** the synthetic set is bootstrapped — the LLM writes a question answerable only
+- **Caveat:** the synthetic set is bootstrapped: the LLM writes a question answerable only
   from a sampled chunk, which becomes the gold passage. Such questions reuse the passage's
   exact wording, which flatters keyword search; real user questions paraphrase more, so
   the BM25 lift on real traffic is likely smaller.
 - Migrating from hand-rolled code to LangChain did not change quality: query embeddings
   were identical. A small retrieval gain seen during migration was traced to the
-  chromadb upgrade (HNSW recall@20 vs exact search: 0.84 → 0.98), not the framework.
+  chromadb upgrade (HNSW recall@20 vs exact search: 0.84 -> 0.98).
 
 ---
 
