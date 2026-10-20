@@ -98,9 +98,13 @@ uv run uvicorn src.api.main:app --reload           # http://localhost:8000/docs
 
 ### 5. Agent, fetches new papers when the index can't answer
 
-A corrective-RAG loop built with LangGraph: after retrieving, an LLM grader checks whether
-the sources can answer the question. If not, the agent rewrites the question into an arXiv
-search query, downloads and indexes the top papers, and retrieves again. `max_fetches`
+A corrective-RAG loop built with LangGraph: after retrieving, a grader decides whether the
+sources can answer the question. If the best chunk's cross-encoder score is below a calibrated
+threshold (`RAG_AGENT_MIN_RERANK_SCORE`, default -1), the sources are off-topic and the agent
+fetches without asking the LLM; otherwise the LLM judges whether they actually answer it. To
+fetch, the LLM extracts key phrases, which become a scoped arXiv query
+(`abs:"FlashAttention" AND abs:"GPU memory" AND cat:cs.*`, relaxed if it returns nothing);
+the top papers are downloaded and indexed, and retrieval runs again. `max_fetches`
 (default 1) bounds the loop so a strict grader can't make it run forever.
 
 ```mermaid

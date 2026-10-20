@@ -32,11 +32,13 @@ def describe(node: str, changes: dict) -> str:
         case "retrieve":
             return f"{len(changes['sources'])} sources"
         case "grade":
-            return "sufficient" if changes["sufficient"] else "NOT sufficient"
+            verdict = "sufficient" if changes["sufficient"] else "NOT sufficient"
+            return f"{verdict} ({changes['grade_reason']})"
         case "rewrite_query":
-            return repr(changes["search_query"])
+            return f"phrases {changes['search_phrases']}"
         case "search_arxiv":
-            return f"indexed {changes['added_papers'] or 'nothing new'}"
+            added = changes["added_papers"] or "nothing new"
+            return f"query {changes['search_query']!r} -> indexed {added}"
         case _:
             return "done"
 

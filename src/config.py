@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     use_hybrid: bool = True  # also run BM25 keyword search and fuse it with dense results
     rrf_k: int = 60  # reciprocal rank fusion constant
 
+    # Agent: below this top rerank score, sources are judged insufficient without asking
+    # the LLM. Calibrated on the 50-question eval set: 88% of in-corpus questions score
+    # above -1, while clearly unrelated topics (FlashAttention, DPO, MoE) score -5 to -11.
+    agent_min_rerank_score: float = -1.0
+
     # Generation
     llm_provider: str = "ollama"  # any init_chat_model provider: see src/generation/llm.py
     llm_model: str = "llama3.1"
